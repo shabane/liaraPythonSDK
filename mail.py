@@ -1,5 +1,5 @@
 import requests
-
+from os import path
 
 class BaseMail:
     def __init__(self, api="https://mail-service.iran.liara.ir/api/v1/mails/"):
@@ -7,7 +7,7 @@ class BaseMail:
 
 
 class Message(BaseMail):
-    def __init__(self, iid, direction, ffrom, to, subject, isFree, isDev, isSpam, isBlockedByRule, isTrash, createdAt, smapScore, readAt, mailserverId: str, header: dict, text=""):
+    def __init__(self, iid, direction, ffrom, to, subject, isFree, isDev, isSpam, isBlockedByRule, isTrash, createdAt, smapScore, readAt, mailserverId: str, header: dict, text=None):
         super().__init__()
         self.iid = iid
         self.direction = direction
@@ -24,12 +24,25 @@ class Message(BaseMail):
         self.readAt = readAt
         self.mailserverId = mailserverId
         self.text = text
+        self.header = header
 
     def __str__(self):
         return self.idd + '->' + self.subject
 
-    def get_text(self, idd):
-        ...
+    def __repr__(self):
+        return self.idd + '->' + self.subject
+
+    def get_text(self):
+        if self.text:
+            return self.text
+
+        msg = requests.get(path.join(self.api, self.mailserverId, "messages", self.iid), headers=self.header)
+        if msg.status_code != 200:
+            return False
+        msg = msg.json()
+        self.text = msg.get('data').get('message').get('text')
+        return self.text
+
 
     def from_dict(self):
         ...
